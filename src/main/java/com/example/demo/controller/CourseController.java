@@ -52,12 +52,17 @@ public class CourseController {
         return courseService.putCourse(course, courseBody);
     }
 
+    // delete this
+
+    // new test
 
     // patch 3
     @PatchMapping("{course}")
     public Course patchCourse(@PathVariable String course, @RequestBody Course courseBody){
         return courseService.patchCourse(course, courseBody);
     }
+
+    // tekst test
 
 
 
