@@ -15,4 +15,5 @@ public interface CourseRepository extends MongoRepository<Course, String> {
     List<Course> findAllByStatus(Course.Status status);
 
 
+    boolean existsByCode(String code);
 }

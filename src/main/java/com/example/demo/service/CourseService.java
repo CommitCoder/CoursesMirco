@@ -12,4 +12,6 @@ public interface CourseService {
     Course putCourse(String course, Course courseBody);
     Course patchCourse(String course, Course courseBody);
 
+    void courseEnrollment(String courseCode, Long studentId);
+
 }

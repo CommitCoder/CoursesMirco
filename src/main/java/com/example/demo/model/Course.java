@@ -1,23 +1,29 @@
 package com.example.demo.model;
 
 
+import com.example.demo.exception.CourseError;
+import com.example.demo.exception.CourseException;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import javax.validation.constraints.Future;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+
+import javax.validation.constraints.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Document
+@Getter
+@Setter
 public class Course {
 
     // bedziemy wpisywac z palca @GeneratedValue nie jest potrzebne, ale nawet jeśli nie
     // wpiszemy to Spring wygeneruje to za nas
     @Id
     private String code;
-    @NotBlank
+    @NotBlank(message = "Field cannot be empty")
     private String name;
     private String description;
     @NotNull
@@ -26,84 +32,63 @@ public class Course {
     @NotNull
     @Future
     private LocalDateTime endDate;
+
+    @Max(value = 10,message = "participantsLimit = 10")
     private Long participantsLimit;
 
-    @NotNull
+    @NotNull(message = "cant be null")
     @Min(0)
     private Long participantsNumber;
 
+    @NotNull // Mongo nie musi mieć enumerated
     private Status status;
 
 
-    @NotNull
     public enum Status{
         ACTIVE,
         INACTIVE,
         FULL
     }
 
+    private List<CourseMembers> courseMembers = new ArrayList<>();
 
-    public String getCode() {
-        return code;
+    public void validateCourse(){
+        validateCourseDate();
+        validateParticipantsLimit();
+        validateFullStatus();
     }
 
-    public void setCode(String code) {
-        this.code = code;
+    public void incrementParticipantsNumber(){
+        // zwiększamy o 1 participants number
+        participantsNumber++;
+
+        //jeśli participants number = participants limit ustaw status na FULL
+        if(participantsNumber.equals(participantsLimit)){
+            setStatus(Course.Status.FULL);
+        }
     }
 
-    public String getName() {
-        return name;
+    private void validateCourseDate(){
+        if(startDate.isAfter(endDate)){
+            throw new CourseException(CourseError.COURSE_START_DATE_IS_AFTER_END_DATE);
+        }
     }
 
-    public void setName(String name) {
-        this.name = name;
+    private void validateParticipantsLimit(){
+        if(participantsNumber > participantsLimit){
+            throw new CourseException(CourseError.COURSE_PARTICIPANTS_LIMIT_IS_EXCEEDED);
+        }
     }
 
-    public String getDescription() {
-        return description;
+    private void validateFullStatus(){
+        if(Status.FULL.equals(status) && !participantsNumber.equals(participantsLimit)){
+            throw new CourseException(CourseError.COURSE_CAN_NOT_SET_FULL_STATUS);
+        }
+        if(Status.ACTIVE.equals(status) && participantsNumber.equals(participantsLimit) ){
+            throw new CourseException(CourseError.COURSE_CAN_NOT_SET_ACTIVE_STATUS);
+        }
     }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
 
-    public LocalDateTime getStartDate() {
-        return startDate;
-    }
 
-    public void setStartDate(LocalDateTime startDate) {
-        this.startDate = startDate;
-    }
-
-    public LocalDateTime getEndDate() {
-        return endDate;
-    }
-
-    public void setEndDate(LocalDateTime endDate) {
-        this.endDate = endDate;
-    }
-
-    public Long getParticipantsLimit() {
-        return participantsLimit;
-    }
-
-    public void setParticipantsLimit(Long participantsLimit) {
-        this.participantsLimit = participantsLimit;
-    }
-
-    public Long getParticipantsNumber() {
-        return participantsNumber;
-    }
-
-    public void setParticipantsNumber(Long participantsNumber) {
-        this.participantsNumber = participantsNumber;
-    }
-
-    public Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
-    }
 }
